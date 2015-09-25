@@ -35,40 +35,46 @@
     </ul>
 
 </body>
-<script src="js/vendor/es6-promise.js"></script>
+<script src="vendor/es6-promise.js"></script>
+<script src="vendor/EventSource.js"></script>
+<script src="vendor/jquery-1.11.3.js"></script>
 <script src="js/dataCollection.js"></script>
 <script>
-if ('serviceWorker' in navigator) {
-    document.querySelector(".support.serviceworker").style.display = "none";
-    document.querySelector(".support.serviceworker.default").style.display = "block";
+/* globals appDataCollection, Collection, $, EventSource */
+/* exported saveEvent */
+'use strict';
 
-    navigator.serviceWorker.register("serviceworker.js").then(function(registration) {
-        console.log("service worker ok ", registration);
+if ('serviceWorker' in navigator) {
+    document.querySelector('.support.serviceworker').style.display = 'none';
+    document.querySelector('.support.serviceworker.default').style.display = 'block';
+
+    navigator.serviceWorker.register('serviceworker.js').then(function(registration) {
+        console.log('service worker ok ', registration);
     }).catch(function(err) {
-        console.error("service worker registration failed", err);
-    })
+        console.error('service worker registration failed', err);
+    });
 } else {
-    document.querySelector(".support.serviceworker").style.display = "none";
-    document.querySelector(".support.serviceworker.missing").style.display = "block";
+    document.querySelector('.support.serviceworker').style.display = 'none';
+    document.querySelector('.support.serviceworker.missing').style.display = 'block';
 }
 
 var talks;
 appDataCollection.open().then(function(db) {
-    talks = new Collection(db, "talks");
+    talks = new Collection(db, 'talks');
 
-    talks.list("by_createdAt").then(function(events) {
-        var listElement = document.getElementById("eventList");
-        listElement.innerHTML = "";
+    talks.list('by_createdAt').then(function(events) {
+        var listElement = document.getElementById('eventList');
+        listElement.innerHTML = '';
         events.forEach(function(e) {
             var div = document.createElement('li');
-            div.appendChild(document.createTextNode(e.name + ": " + e.createdAt));
+            div.appendChild(document.createTextNode(e.name + ': ' + JSON.stringify(e.createdAt)));
             listElement.appendChild(div);
         });
     });
     talks.on('insert', function(e) {
-        var listElement = document.getElementById("eventList");
+        var listElement = document.getElementById('eventList');
         var div = document.createElement('li');
-        div.appendChild(document.createTextNode(e.name + ": " + e.createdAt));
+        div.appendChild(document.createTextNode(e.name + ': ' + JSON.stringify(e.createdAt)));
         listElement.appendChild(div);
     });
 });
@@ -76,10 +82,29 @@ appDataCollection.open().then(function(db) {
 function saveEvent(event) {
   event.preventDefault();
   talks.save({
-    name: document.getElementById("event_name").value,
-    description: document.getElementById("event_description").value
+    name: document.getElementById('event_name').value,
+    description: document.getElementById('event_description').value
+  }).then(function(talk) {
+    $.ajax({
+      method: 'post',
+      url: '/talks',
+      dataType: 'post',
+      contentType: 'application/json',
+      data: JSON.stringify(talk)
+    }).then(function() {
+      console.log('sent to server');
+    });
   });
   return false;
 }
+
+var talkEvents = new EventSource('/talks/events');
+talkEvents.addEventListener('insert', function(event) {
+    var e = JSON.parse(event.data);  
+    var listElement = document.getElementById('eventList');
+    var div = document.createElement('li');
+    div.appendChild(document.createTextNode(e.name + ': ' + e.createdAt));
+    listElement.appendChild(div);
+});
 </script>
 </html>

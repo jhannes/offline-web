@@ -40,7 +40,7 @@ function Collection(db, storeName) {
                 fn(item);
             });
 
-            return result;
+            return item;
         });
     };
 

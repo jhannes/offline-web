@@ -33,8 +33,8 @@ describe('data collection', function() {
 
         it('can return saved data', function() {
             var talk = { title: 'the title' };
-            return collection.save(talk).then(function(id) {
-                return collection.get(id);
+            return collection.save(talk).then(function(talk) {
+                return collection.get(talk.id);
             }).then(function(talk) {
                 expect(talk.title).to.equal('the title');
             });
@@ -42,8 +42,8 @@ describe('data collection', function() {
 
         it('initializes data', function() {
             var talk = { title: 'the title' };
-            return collection.save(talk).then(function(id) {
-                return collection.get(id);
+            return collection.save(talk).then(function(talk) {
+                return collection.get(talk.id);
             }).then(function(talk) {
                 expect(talk.id).to.match(/^\w{8}-\w{4}-\w{4}-\w{4}-\w{12}$/);
                 expect(talk.createdAt).to.be.a('Date');
