@@ -1,0 +1,6 @@
+{
+    "browser": true,
+    "globals": ["self", "console"],
+    "eqeqeq": true,
+    "indent": 4
+}

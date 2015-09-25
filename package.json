@@ -1,0 +1,28 @@
+{
+  "name": "offline-web",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "karma": "node node_modules/karma/bin/karma start --watch --growl",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "jshint": "node node_modules/jshint/bin/jshint",
+    "pre-commit": "npm run jshint"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.13.3",
+    "morgan": "^1.6.1"
+  },
+  "devDependencies": {
+    "chai": "^3.3.0",
+    "jshint": "^2.8.0",
+    "karma": "^0.13.10",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^0.2.0",
+    "karma-growl": "^0.1.0",
+    "karma-mocha": "^0.2.0",
+    "mocha": "^2.3.3"
+  }
+}

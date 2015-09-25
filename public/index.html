@@ -1,0 +1,85 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Offline Web</title>
+ <style>
+  .support {
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+    <h1>Welcome to the offline web!</h1>
+    
+    <div class="support serviceworker missing">
+    Service worker is not supported on your browser.
+    </div>
+    <div class="support serviceworker default">
+    Service worker is supported on your browser.
+    </div>
+
+    <form onsubmit="saveEvent(event)">
+        <label>
+            Event name:
+            <input type="text" name="event[name]" id="event_name" />
+        </label>
+        <label>
+            Event description:
+            <input type="text" name="event[description]" id="event_description" />
+        </label>
+        <input type="submit" />
+    </form>
+
+    <ul id="eventList">
+    </ul>
+
+</body>
+<script src="js/vendor/es6-promise.js"></script>
+<script src="js/dataCollection.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+    document.querySelector(".support.serviceworker").style.display = "none";
+    document.querySelector(".support.serviceworker.default").style.display = "block";
+
+    navigator.serviceWorker.register("serviceworker.js").then(function(registration) {
+        console.log("service worker ok ", registration);
+    }).catch(function(err) {
+        console.error("service worker registration failed", err);
+    })
+} else {
+    document.querySelector(".support.serviceworker").style.display = "none";
+    document.querySelector(".support.serviceworker.missing").style.display = "block";
+}
+
+var talks;
+appDataCollection.open().then(function(db) {
+    talks = new Collection(db, "talks");
+
+    talks.list("by_createdAt").then(function(events) {
+        var listElement = document.getElementById("eventList");
+        listElement.innerHTML = "";
+        events.forEach(function(e) {
+            var div = document.createElement('li');
+            div.appendChild(document.createTextNode(e.name + ": " + e.createdAt));
+            listElement.appendChild(div);
+        });
+    });
+    talks.on('insert', function(e) {
+        var listElement = document.getElementById("eventList");
+        var div = document.createElement('li');
+        div.appendChild(document.createTextNode(e.name + ": " + e.createdAt));
+        listElement.appendChild(div);
+    });
+});
+
+function saveEvent(event) {
+  event.preventDefault();
+  talks.save({
+    name: document.getElementById("event_name").value,
+    description: document.getElementById("event_description").value
+  });
+  return false;
+}
+</script>
+</html>
