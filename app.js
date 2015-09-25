@@ -16,9 +16,9 @@ app.post('/talks', function(req, res) {
     res.status(200).end();
 
     eventSources.forEach(function(eventSource) {
-        eventSource.write("event: insert\n");
-        eventSource.write("id: " + req.body.id + "\n");
-        eventSource.write("data: " + JSON.stringify(req.body) + "\n\n");
+        eventSource.write('event: insert\n');
+        eventSource.write('id: ' + req.body.id + '\n');
+        eventSource.write('data: ' + JSON.stringify(req.body) + '\n\n');
     });
 });
 

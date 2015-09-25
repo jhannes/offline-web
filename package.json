@@ -7,7 +7,8 @@
     "karma": "node node_modules/karma/bin/karma start --watch --growl",
     "test": "echo \"Error: no test specified\" && exit 1",
     "jshint": "node node_modules/jshint/bin/jshint app.js server.js test public/js public/serviceworker.js",
-    "pre-commit": "npm run jshint"
+    "jscs": "node node_modules/jscs/bin/jscs --fix app.js server.js test public/js public/serviceworker.js",
+    "pre-commit": "npm run jscs && npm run jshint"
   },
   "author": "",
   "license": "ISC",
@@ -18,6 +19,7 @@
   },
   "devDependencies": {
     "chai": "^3.3.0",
+    "jscs": "^2.1.1",
     "jshint": "^2.8.0",
     "karma": "^0.13.10",
     "karma-chai": "^0.1.0",
