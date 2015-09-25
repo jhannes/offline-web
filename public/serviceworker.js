@@ -1,7 +1,7 @@
 /* globals caches, fetch */
-'use strict';
 
 self.addEventListener('install', function(e) {
+    'use strict';
     e.waitUntil(
     caches.open('offlineweb-cache-v1').then(function(cache) {
         return cache.addAll([
@@ -18,11 +18,13 @@ self.addEventListener('install', function(e) {
 });
 
 self.addEventListener('activate', function(event) {
+    'use strict';
     console.log('activate', event);
     event.waitUntil(self.clients.claim());
 });
 
 self.addEventListener('fetch', function(event) {
+    'use strict';
     console.log(event.request.url);
 
     event.respondWith(

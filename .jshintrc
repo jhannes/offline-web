@@ -1,4 +1,7 @@
 {
+    "globals": ["console"],
     "node": true,
-    "globalstrict": false
+    "globalstrict": true,
+    "eqeqeq": true,
+    "indent": 4
 }

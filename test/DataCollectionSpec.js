@@ -1,8 +1,9 @@
-/* globals appDataCollection, Collection */
+/* globals appDataCollection, Collection, expect */
 /* jshint expr: true */
-'use strict';
 
 function toArray(obj) {
+    'use strict';
+
     var array = [];
 
     // iterate backwards ensuring that length is an UInt32
@@ -14,6 +15,8 @@ function toArray(obj) {
 }
 
 describe('data collection', function() {
+    'use strict';
+
     it('opens database', function() {
         return appDataCollection.open().then(function(db) {
             expect(toArray(db.objectStoreNames)).to.contain('talks');

@@ -6,7 +6,7 @@
   "scripts": {
     "karma": "node node_modules/karma/bin/karma start --watch --growl",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "jshint": "node node_modules/jshint/bin/jshint",
+    "jshint": "node node_modules/jshint/bin/jshint app.js server.js test public/js public/serviceworker.js",
     "pre-commit": "npm run jshint"
   },
   "author": "",

@@ -1,8 +1,8 @@
 /* exported appDataCollection */
 /* globals indexedDB */
-'use strict';
 
 function requestToPromise(operation) {
+    'use strict';
     return new Promise(function(resolve, reject) {
         var request = operation();
         request.onsuccess = function() {
@@ -16,6 +16,7 @@ function requestToPromise(operation) {
 }
 
 function Collection(db, storeName) {
+    'use strict';
     function guid() {
         function s4() {
             return Math.floor((1 + Math.random()) * 0x10000)
@@ -85,6 +86,7 @@ function Collection(db, storeName) {
 }
 
 var appDataCollection = (function() {
+    'use strict';
     function open() {
         return requestToPromise(function() {
             var openRequest = indexedDB.open('my_app_db', 1);
