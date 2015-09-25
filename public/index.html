@@ -11,7 +11,7 @@
 <body>
 
     <h1>Welcome to the offline web!</h1>
-    
+
     <div class="support serviceworker missing">
     Service worker is not supported on your browser.
     </div>
@@ -100,7 +100,7 @@ function saveEvent(event) {
 
 var talkEvents = new EventSource('/talks/events');
 talkEvents.addEventListener('insert', function(event) {
-    var e = JSON.parse(event.data);  
+    var e = JSON.parse(event.data);
     var listElement = document.getElementById('eventList');
     var div = document.createElement('li');
     div.appendChild(document.createTextNode(e.name + ': ' + e.createdAt));
