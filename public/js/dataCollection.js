@@ -10,7 +10,7 @@ function requestToPromise(operation) {
         };
 
         request.onerror = function(e) {
-            reject(e);
+            reject(e.target.error);
         };
     });
 }
@@ -35,6 +35,7 @@ function Collection(db, storeName) {
         return requestToPromise(function() {
             item.id = guid();
             item.createdAt = item.createdAt || new Date();
+            item.transmittedAt = item.transmittedAt || 'never';
             return storeInTx('readwrite').put(item);
         }).then(function(result) {
             listeners.insert.forEach(function(fn) {
@@ -42,6 +43,12 @@ function Collection(db, storeName) {
             });
 
             return item;
+        });
+    };
+
+    this.update = function(item) {
+        return requestToPromise(function() {
+            return storeInTx('readwrite').put(item);
         });
     };
 
@@ -57,9 +64,9 @@ function Collection(db, storeName) {
         });
     };
 
-    this.list = function(index) {
+    this.list = function(index, keyRange) {
         return new Promise(function(resolve, reject) {
-            var cursor = storeInTx().index(index).openCursor();
+            var cursor = storeInTx().index(index).openCursor(keyRange);
             var result = [];
             cursor.onsuccess = function(e) {
                 if (e.target.result) {
@@ -96,7 +103,8 @@ var appDataCollection = (function() {
                 var db = openRequest.result;
                 if (e.oldVersion < 1) {
                     var store = db.createObjectStore('talks', { keyPath: 'id' });
-                    store.createIndex('by_createdAt', 'createdAt', {unique: true});
+                    store.createIndex('by_createdAt', 'createdAt', {unique: false});
+                    store.createIndex('by_transmittedAt', 'transmittedAt', {unique: false});
                 }
             };
 

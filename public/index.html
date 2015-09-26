@@ -19,7 +19,7 @@
     Service worker is supported on your browser.
     </div>
 
-    <form onsubmit="saveEvent(event)">
+    <form onsubmit="saveEvent(event)" id="eventForm">
         <label>
             Event name:
             <input type="text" name="event[name]" id="event_name" />
@@ -58,8 +58,9 @@ if ('serviceWorker' in navigator) {
     document.querySelector('.support.serviceworker.missing').style.display = 'block';
 }
 
-var talks;
-appDataCollection.open().then(function(db) {
+var talks, db;
+appDataCollection.open().then(function(_db) {
+    db = _db;
     talks = new Collection(db, 'talks');
 
     talks.list('by_createdAt').then(function(events) {
@@ -79,22 +80,35 @@ appDataCollection.open().then(function(db) {
     });
 });
 
+function transmitToServer() {
+    talks.list('by_transmittedAt', 'never').then(function(items) {
+        items.forEach(function(talk) {
+            $.ajax({
+              method: 'post',
+              url: '/talks',
+              contentType: 'application/json',
+              data: JSON.stringify(talk)
+            }).fail(function(jqXHR, textStatus, e) {
+              console.log("Failed", e);
+              setTimeout(transmitToServer, 10000);
+            }).then(function() {
+              talk.transmittedAt = new Date();
+              console.log('sent to server');
+              return talks.update(talk);
+            });
+        });
+    });
+}
+
 function saveEvent(event) {
   event.preventDefault();
   talks.save({
     name: document.getElementById('event_name').value,
     description: document.getElementById('event_description').value
-  }).then(function(talk) {
-    $.ajax({
-      method: 'post',
-      url: '/talks',
-      dataType: 'post',
-      contentType: 'application/json',
-      data: JSON.stringify(talk)
-    }).then(function() {
-      console.log('sent to server');
-    });
+  }).then(function() {
+    setTimeout(transmitToServer);
   });
+  document.getElementById("eventForm").reset();
   return false;
 }
 

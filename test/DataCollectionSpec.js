@@ -23,7 +23,7 @@ describe('data collection', function() {
         });
     });
 
-    describe('use collection', function() {
+    describe('with collection', function() {
         var collection;
 
         before(function(done) {
@@ -70,6 +70,34 @@ describe('data collection', function() {
                 return collection.list('by_createdAt');
             }).then(function(talks) {
                 expect(talks).to.be.empty;
+            });
+        });
+
+        it('lists transmitted items', function() {
+            var transmitted = { title: 'talk transmitted successfully', transmittedAt: new Date() };
+            var failed = { title: 'talk where transmission failed' };
+
+            return Promise.all([
+                collection.save(failed), collection.save(transmitted),
+            ]).then(function() {
+                return collection.list('by_transmittedAt', 'never');
+            }).then(function(talks) {
+                expect(talks.map(function(t) { return t.title; }))
+                    .to.contain(failed.title)
+                    .and.not.contain(transmitted.title);
+            });
+        });
+
+        it('updates items', function() {
+            var talk = { title: 'talk to be transmitted' };
+            return collection.save(talk).then(function() {
+                talk.transmittedAt = new Date();
+                return collection.update(talk);
+            }).then(function() {
+                return collection.list('by_transmittedAt', 'never');
+            }).then(function(talks) {
+                expect(talks.map(function(t) { return t.title; }))
+                    .to.not.contain(talk.title);
             });
         });
 

@@ -8,9 +8,11 @@ self.addEventListener('install', function(e) {
           '/',
           '/index.html',
           '/js/dataCollection.js',
+          '/vendor/es6-promise.js',
+          '/vendor/EventSource.js',
+          '/vendor/jquery-1.11.3.js',
           '/images/johannes-icon.jpg',
       ]).then(function() {
-          console.log('cache installed');
           return self.skipWaiting();
       });
     })
@@ -19,13 +21,11 @@ self.addEventListener('install', function(e) {
 
 self.addEventListener('activate', function(event) {
     'use strict';
-    console.log('activate', event);
     event.waitUntil(self.clients.claim());
 });
 
 self.addEventListener('fetch', function(event) {
     'use strict';
-    console.log(event.request.url);
 
     event.respondWith(
     caches.match(event.request).then(function(response) {
