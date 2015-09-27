@@ -26,12 +26,12 @@ describe('data collection', function() {
     describe('with collection', function() {
         var collection;
 
-        before(function(done) {
-            appDataCollection.open().then(function(db) {
+        before(function() {
+            return appDataCollection.open().then(function(db) {
                 collection = new Collection(db, 'talks');
             }).then(function() {
                 collection.clear();
-            }).then(done, done);
+            });
         });
 
         it('can return saved data', function() {
@@ -92,7 +92,7 @@ describe('data collection', function() {
             var talk = { title: 'talk to be transmitted' };
             return collection.save(talk).then(function() {
                 talk.transmittedAt = new Date();
-                return collection.update(talk);
+                return collection.save(talk);
             }).then(function() {
                 return collection.list('by_transmittedAt', 'never');
             }).then(function(talks) {
@@ -100,15 +100,42 @@ describe('data collection', function() {
                     .to.not.contain(talk.title);
             });
         });
+    });
 
-        it('sends event on save', function(done) {
-            var talk = { title: 'talk to be inserted' };
+    it('sends event on save', function(done) {
+        var talk = { title: 'talk to be inserted' };
 
-            collection.on('insert', function(newEntry) {
+        appDataCollection.open().then(function(db) {
+            var collection = new Collection(db, 'talks');
+
+            collection.on('change', function(newEntry) {
                 expect(newEntry.title).to.equal('talk to be inserted');
                 done();
             });
 
+            return collection;
+        }).then(function(collection) {
+            collection.save(talk);
+        });
+    });
+
+    it('sends event on updates', function(done) {
+        var talk = { title: 'talk to be updated' };
+        var collection;
+
+        appDataCollection.open().then(function(db) {
+            collection = new Collection(db, 'talks');
+        }).then(function() {
+            return collection.save(talk);
+        }).then(function() {
+            collection.on('change', function(newEntry) {
+                expect(newEntry.transmittedAt).to.not.be.null;
+                done();
+            });
+
+            return collection;
+        }).then(function(collection) {
+            talk.transmittedAt = new Date();
             collection.save(talk);
         });
     });

@@ -11,6 +11,7 @@ self.addEventListener('install', function(e) {
           '/vendor/es6-promise.js',
           '/vendor/EventSource.js',
           '/vendor/jquery-1.11.3.js',
+          'vendor/handlebars-v4.0.2.js',
           '/images/johannes-icon.jpg',
       ]).then(function() {
           return self.skipWaiting();

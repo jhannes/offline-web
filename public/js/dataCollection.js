@@ -32,23 +32,17 @@ function Collection(db, storeName) {
     }
 
     this.save = function(item) {
+        item.id = item.id || guid();
+        item.createdAt = item.createdAt || new Date();
+        item.transmittedAt = item.transmittedAt || 'never';
         return requestToPromise(function() {
-            item.id = guid();
-            item.createdAt = item.createdAt || new Date();
-            item.transmittedAt = item.transmittedAt || 'never';
             return storeInTx('readwrite').put(item);
-        }).then(function(result) {
-            listeners.insert.forEach(function(fn) {
+        }).then(function() {
+            listeners.change.forEach(function(fn) {
                 fn(item);
             });
-
+        }).then(function() {
             return item;
-        });
-    };
-
-    this.update = function(item) {
-        return requestToPromise(function() {
-            return storeInTx('readwrite').put(item);
         });
     };
 
@@ -82,8 +76,7 @@ function Collection(db, storeName) {
     };
 
     var listeners = {
-        insert: [],
-        update: [],
+        change: [],
         delete: [],
     };
 

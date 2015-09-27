@@ -16,10 +16,12 @@ var db = new Datastore({ filename: 'db/talks.json' });
 
 db.loadDatabase(function(err) {    // Callback is optional
     app.post('/talks', function(req, res) {
-        talks[req.body.id] = req.body;
+        var talk = req.body;
+        talk._id = talk.id;
+        talks[talk.id] = talk;
         res.status(200).end();
 
-        db.insert(req.body);
+        db.insert(talk);
 
         eventSources.forEach(function(eventSource) {
             eventSource.write('event: insert\n');
@@ -37,8 +39,6 @@ db.loadDatabase(function(err) {    // Callback is optional
         res.write('\n');
 
         db.find({}).sort({createdAt: -1}).limit(1).exec(function(err, tail) {
-            console.log(err);
-            console.log(tail);
             res.write('event: start\n');
             res.write('data: ' + JSON.stringify({tail: tail[0].createdAt}) + '\n\n');
         });

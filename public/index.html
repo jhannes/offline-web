@@ -10,7 +10,7 @@
 </head>
 <body>
 
-    <h1>Welcome to the offline web!</h1>
+    <h1>Offline web demo!</h1>
 
     <div class="support serviceworker missing">
     Service worker is not supported on your browser.
@@ -19,7 +19,7 @@
     Service worker is supported on your browser.
     </div>
 
-    <form onsubmit="saveEvent(event)" id="eventForm">
+    <form id="eventForm">
         <label>
             Event name:
             <input type="text" name="event[name]" id="event_name" />
@@ -38,87 +38,108 @@
 <script src="vendor/es6-promise.js"></script>
 <script src="vendor/EventSource.js"></script>
 <script src="vendor/jquery-1.11.3.js"></script>
+<script src="vendor/handlebars-v4.0.2.js"></script>
 <script src="js/dataCollection.js"></script>
+<script id="itemTemplate" type="text/x-handlebars-template">
+<li id='item-{{id}}'>
+  {{name}}: {{createdAt}}
+  <button>Delete me</button>
+</li>
+</script>
 <script>
-/* globals appDataCollection, Collection, $, EventSource */
+/* globals appDataCollection, Collection, $, EventSource, Handlebars */
 /* exported saveEvent */
-'use strict';
+var talks;
 
-if ('serviceWorker' in navigator) {
-    document.querySelector('.support.serviceworker').style.display = 'none';
-    document.querySelector('.support.serviceworker.default').style.display = 'block';
+function postJSON(url, json) {
+  return $.ajax({
+    method: 'post',
+    url: url,
+    contentType: 'application/json',
+    data: JSON.stringify(json)
+  });
+}
+
+function setApiSupport(api, supportLevel) {
+  $(".support." + api).hide();
+  $(".support." + api + "." + supportLevel).show();
+}
+
+function transmit() {
+  talks.transmitToServer(function(item) {
+    return postJSON('/talks', item);
+  }).fail(function() {
+    console.log('Failed', e);
+    setTimeout(transmit, 10000);
+  });
+}
+
+function transmitToServer() {
+    talks.list('by_transmittedAt', 'never').then(function(items) {
+        items.forEach(function(talk) {
+            postJSON('/talks', talk).fail(function(jqXHR, textStatus, e) {
+              console.log('Failed', e);
+              setTimeout(transmitToServer, 10000);
+            }).then(function() {
+              talk.transmittedAt = new Date();
+              return talks.save(talk);
+            });
+        });
+    });
+}
+
+$(function() {
+  'use strict';
+
+  var itemTemplate = Handlebars.compile($('#itemTemplate').html());
+
+  if ('serviceWorker' in navigator) {
+    setApiSupport("serviceWorker", "default");
 
     navigator.serviceWorker.register('serviceworker.js').then(function(registration) {
         console.log('service worker ok ', registration);
     }).catch(function(err) {
         console.error('service worker registration failed', err);
     });
-} else {
-    document.querySelector('.support.serviceworker').style.display = 'none';
-    document.querySelector('.support.serviceworker.missing').style.display = 'block';
-}
+  } else {
+    setApiSupport("serviceWorker", "missing");
+  }
 
-var talks, db;
-appDataCollection.open().then(function(_db) {
-    db = _db;
-    talks = new Collection(db, 'talks');
+  appDataCollection.open().then(function(db) {
+      talks = new Collection(db, 'talks');
 
-    talks.list('by_createdAt').then(function(events) {
-        var listElement = document.getElementById('eventList');
-        listElement.innerHTML = '';
+      talks.list('by_createdAt').then(function(events) {
+        var eventList = $('#eventList');
+        eventList.empty();
         events.forEach(function(e) {
-            var div = document.createElement('li');
-            div.appendChild(document.createTextNode(e.name + ': ' + JSON.stringify(e.createdAt)));
-            listElement.appendChild(div);
+          eventList.append(itemTemplate(e));
         });
-    });
-    talks.on('insert', function(e) {
-        var listElement = document.getElementById('eventList');
-        var div = document.createElement('li');
-        div.appendChild(document.createTextNode(e.name + ': ' + JSON.stringify(e.createdAt)));
-        listElement.appendChild(div);
-    });
-});
-
-function transmitToServer() {
-    talks.list('by_transmittedAt', 'never').then(function(items) {
-        items.forEach(function(talk) {
-            $.ajax({
-              method: 'post',
-              url: '/talks',
-              contentType: 'application/json',
-              data: JSON.stringify(talk)
-            }).fail(function(jqXHR, textStatus, e) {
-              console.log("Failed", e);
-              setTimeout(transmitToServer, 10000);
-            }).then(function() {
-              talk.transmittedAt = new Date();
-              console.log('sent to server');
-              return talks.update(talk);
-            });
-        });
-    });
-}
-
-function saveEvent(event) {
-  event.preventDefault();
-  talks.save({
-    name: document.getElementById('event_name').value,
-    description: document.getElementById('event_description').value
-  }).then(function() {
-    setTimeout(transmitToServer);
+      });
+      talks.on('change', function(e) {
+        if (!$('#item-' + e.id).length) {
+          $('#eventList').append(itemTemplate(e));
+        } else {
+          $('#item-' + e.id).replaceWith(itemTemplate(e));
+        }
+      })
   });
-  document.getElementById("eventForm").reset();
-  return false;
-}
 
-var talkEvents = new EventSource('/talks/events');
-talkEvents.addEventListener('insert', function(event) {
-    var e = JSON.parse(event.data);
-    var listElement = document.getElementById('eventList');
-    var div = document.createElement('li');
-    div.appendChild(document.createTextNode(e.name + ': ' + e.createdAt));
-    listElement.appendChild(div);
+  $('#eventForm').submit(function(event) {
+    event.preventDefault();
+    talks.save({
+      name: $('#event_name').val(),
+      description: $('#event_description').val()
+    }).then(function() {
+      setTimeout(transmitToServer);
+    });
+    this.reset();
+    return false;
+  });
+
+  var talkEvents = new EventSource('/talks/events');
+  talkEvents.addEventListener('insert', function(event) {
+    talks.save(JSON.parse(event.data));
+  });
 });
 </script>
 </html>
