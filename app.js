@@ -4,7 +4,6 @@ var bodyParser = require('body-parser');
 
 var app = express();
 
-app.use(require('morgan')('dev'));
 app.use(express.static('public'));
 app.use(bodyParser.json());
 

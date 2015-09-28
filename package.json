@@ -4,10 +4,12 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "karma": "node node_modules/karma/bin/karma start --watch --growl",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "jshint": "node node_modules/jshint/bin/jshint app.js server.js test public/js public/serviceworker.js",
-    "jscs": "node node_modules/jscs/bin/jscs --fix app.js server.js test public/js public/serviceworker.js",
+    "watch": "karma start --watch --growl",
+    "karma": "karma",
+    "smoke-test": "mocha integrationTests",
+    "test": "karma start --single-run",
+    "jshint": "jshint app.js server.js test public/js public/serviceworker.js",
+    "jscs": "jscs --fix app.js server.js test public/js public/serviceworker.js",
     "pre-commit": "npm run jscs && npm run jshint"
   },
   "author": "",
@@ -27,6 +29,8 @@
     "karma-chrome-launcher": "^0.2.0",
     "karma-growl": "^0.1.0",
     "karma-mocha": "^0.2.0",
-    "mocha": "^2.3.3"
+    "mocha": "^2.3.3",
+    "selenium-standalone": "^4.6.3",
+    "webdriverio": "^3.2.4"
   }
 }
