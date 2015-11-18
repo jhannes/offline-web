@@ -40,7 +40,7 @@ db.loadDatabase(function(err) {    // Callback is optional
         db.find({}).sort({createdAt: -1}).limit(1).exec(function(err, tail) {
             if (tail.length > 0) {
                 res.write('event: start\n');
-                res.write('data: ' + JSON.stringify({tail: tail[0].createdAt}) + '\n\n');                
+                res.write('data: ' + JSON.stringify({tail: tail[0].createdAt}) + '\n\n');
             }
         });
 
