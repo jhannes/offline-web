@@ -19,7 +19,7 @@ describe('data collection', function() {
 
     it('opens database', function() {
         return appDataCollection.open().then(function(db) {
-            expect(toArray(db.objectStoreNames)).to.contain('talks');
+            expect(toArray(db.objectStoreNames)).to.contain('chatCollection');
         });
     });
 
@@ -28,105 +28,105 @@ describe('data collection', function() {
 
         before(function() {
             return appDataCollection.open().then(function(db) {
-                collection = new Collection(db, 'talks');
+                collection = new Collection(db, 'chatCollection');
             }).then(function() {
-                collection.clear();
+                return collection.clear();
             });
         });
 
         it('can return saved data', function() {
-            var talk = { title: 'the title' };
-            return collection.save(talk).then(function(talk) {
-                return collection.get(talk.id);
-            }).then(function(talk) {
-                expect(talk.title).to.equal('the title');
+            var chat = { title: 'the title' };
+            return collection.save(chat).then(function(chat) {
+                return collection.get(chat.id);
+            }).then(function(chat) {
+                expect(chat.title).to.equal('the title');
             });
         });
 
         it('initializes data', function() {
-            var talk = { title: 'the title' };
-            return collection.save(talk).then(function(talk) {
-                return collection.get(talk.id);
-            }).then(function(talk) {
-                expect(talk.id).to.match(/^\w{8}-\w{4}-\w{4}-\w{4}-\w{12}$/);
-                expect(talk.createdAt).to.be.a('Date');
+            var chat = { title: 'the title' };
+            return collection.save(chat).then(function(chat) {
+                return collection.get(chat.id);
+            }).then(function(chat) {
+                expect(chat.id).to.match(/^\w{8}-\w{4}-\w{4}-\w{4}-\w{12}$/);
+                expect(chat.createdAt).to.be.a('Date');
             });
         });
 
         it('can list all data', function() {
-            var talk = { title: 'listed title' };
-            return collection.save(talk).then(function() {
+            var chat = { title: 'listed title' };
+            return collection.save(chat).then(function() {
                 return collection.list('by_createdAt');
-            }).then(function(talks) {
-                expect(talks.map(function(t) { return t.title; })).to.contain('listed title');
+            }).then(function(chats) {
+                expect(chats.map(function(t) { return t.title; })).to.contain('listed title');
             });
         });
 
         it('can delete all data', function() {
-            var talk = { title: 'talk to be deleted' };
-            return collection.save(talk).then(function() {
+            var chat = { title: 'chat to be deleted' };
+            return collection.save(chat).then(function() {
                 return collection.clear();
             }).then(function() {
                 return collection.list('by_createdAt');
-            }).then(function(talks) {
-                expect(talks).to.be.empty;
+            }).then(function(chats) {
+                expect(chats).to.be.empty;
             });
         });
 
         it('lists transmitted items', function() {
-            var transmitted = { title: 'talk transmitted successfully', transmittedAt: new Date() };
-            var failed = { title: 'talk where transmission failed' };
+            var transmitted = { title: 'chat transmitted successfully', transmittedAt: new Date() };
+            var failed = { title: 'chat where transmission failed' };
 
             return Promise.all([
                 collection.save(failed), collection.save(transmitted),
             ]).then(function() {
                 return collection.list('by_transmittedAt', 'never');
-            }).then(function(talks) {
-                expect(talks.map(function(t) { return t.title; }))
+            }).then(function(chats) {
+                expect(chats.map(function(t) { return t.title; }))
                     .to.contain(failed.title)
                     .and.not.contain(transmitted.title);
             });
         });
 
         it('updates items', function() {
-            var talk = { title: 'talk to be transmitted' };
-            return collection.save(talk).then(function() {
-                talk.transmittedAt = new Date();
-                return collection.save(talk);
+            var chat = { title: 'chat to be transmitted' };
+            return collection.save(chat).then(function() {
+                chat.transmittedAt = new Date();
+                return collection.save(chat);
             }).then(function() {
                 return collection.list('by_transmittedAt', 'never');
-            }).then(function(talks) {
-                expect(talks.map(function(t) { return t.title; }))
-                    .to.not.contain(talk.title);
+            }).then(function(chats) {
+                expect(chats.map(function(t) { return t.title; }))
+                    .to.not.contain(chat.title);
             });
         });
     });
 
     it('sends event on save', function(done) {
-        var talk = { title: 'talk to be inserted' };
+        var chat = { title: 'chat to be inserted' };
 
         appDataCollection.open().then(function(db) {
-            var collection = new Collection(db, 'talks');
+            var collection = new Collection(db, 'chatCollection');
 
             collection.on('change', function(newEntry) {
-                expect(newEntry.title).to.equal('talk to be inserted');
+                expect(newEntry.title).to.equal('chat to be inserted');
                 done();
             });
 
             return collection;
         }).then(function(collection) {
-            collection.save(talk);
+            collection.save(chat);
         });
     });
 
     it('sends event on updates', function(done) {
-        var talk = { title: 'talk to be updated' };
+        var chat = { title: 'chat to be updated' };
         var collection;
 
         appDataCollection.open().then(function(db) {
-            collection = new Collection(db, 'talks');
+            collection = new Collection(db, 'chatCollection');
         }).then(function() {
-            return collection.save(talk);
+            return collection.save(chat);
         }).then(function() {
             collection.on('change', function(newEntry) {
                 expect(newEntry.transmittedAt).to.not.be.null;
@@ -135,8 +135,8 @@ describe('data collection', function() {
 
             return collection;
         }).then(function(collection) {
-            talk.transmittedAt = new Date();
-            collection.save(talk);
+            chat.transmittedAt = new Date();
+            collection.save(chat);
         });
     });
 
