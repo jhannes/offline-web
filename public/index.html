@@ -6,6 +6,10 @@
   .support {
     display: none;
   }
+  
+  label input {
+    display: block;
+  }
 </style>
 </head>
 <body>
@@ -18,20 +22,22 @@
     <div class="support serviceworker default">
     Service worker is supported on your browser.
     </div>
+    <hr />
 
-    <form id="eventForm">
+    <form id="chatForm">
         <label>
-            Event name:
-            <input type="text" name="event[name]" id="event_name" />
+            Username:
+            <input type="text" name="chat[username]" id="chat_username" required />
         </label>
+        <hr />
         <label>
-            Event description:
-            <input type="text" name="event[description]" id="event_description" />
+            Message:
+            <input type="text" name="chat[message]" id="chat_message" required />
         </label>
         <input type="submit" />
     </form>
 
-    <ul id="eventList">
+    <ul id="chatList">
     </ul>
 
 </body>
@@ -42,14 +48,13 @@
 <script src="js/dataCollection.js"></script>
 <script id="itemTemplate" type="text/x-handlebars-template">
 <li id='item-{{id}}'>
-  {{name}}: {{createdAt}}
-  <button>Delete me</button>
+  {{name}}: {{description}} {{createdAt}}
 </li>
 </script>
 <script>
 /* globals appDataCollection, Collection, $, EventSource, Handlebars */
 /* exported saveEvent */
-var talks;
+var chatCollection;
 
 function postJSON(url, json) {
   return $.ajax({
@@ -66,8 +71,8 @@ function setApiSupport(api, supportLevel) {
 }
 
 function transmit() {
-  talks.transmitToServer(function(item) {
-    return postJSON('/talks', item);
+  chatCollection.transmitToServer(function(item) {
+    return postJSON('/chats', item);
   }).fail(function() {
     console.log('Failed', e);
     setTimeout(transmit, 10000);
@@ -75,14 +80,14 @@ function transmit() {
 }
 
 function transmitToServer() {
-    talks.list('by_transmittedAt', 'never').then(function(items) {
-        items.forEach(function(talk) {
-            postJSON('/talks', talk).fail(function(jqXHR, textStatus, e) {
+    chatCollection.list('by_transmittedAt', 'never').then(function(items) {
+        items.forEach(function(chat) {
+            postJSON('/chats', chat).fail(function(jqXHR, textStatus, e) {
               console.log('Failed', e);
               setTimeout(transmitToServer, 10000);
             }).then(function() {
-              talk.transmittedAt = new Date();
-              return talks.save(talk);
+              chat.transmittedAt = new Date();
+              return chatCollection.save(chat);
             });
         });
     });
@@ -106,39 +111,40 @@ $(function() {
   }
 
   appDataCollection.open().then(function(db) {
-      talks = new Collection(db, 'talks');
+      chatCollection = new Collection(db, 'chatCollection');
 
-      talks.list('by_createdAt').then(function(events) {
-        var eventList = $('#eventList');
-        eventList.empty();
-        events.forEach(function(e) {
-          eventList.append(itemTemplate(e));
+      chatCollection.list('by_createdAt').then(function(chats) {
+        var chatList = $('#chatList');
+        chatList.empty();
+        chats.forEach(function(chat) {
+          chatList.append(itemTemplate(chat));
         });
       });
-      talks.on('change', function(e) {
+      chatCollection.on('change', function(e) {
         if (!$('#item-' + e.id).length) {
-          $('#eventList').append(itemTemplate(e));
+          $('#chatList').append(itemTemplate(e));
         } else {
           $('#item-' + e.id).replaceWith(itemTemplate(e));
         }
       })
   });
 
-  $('#eventForm').submit(function(event) {
+  $('#chatForm').submit(function(event) {
     event.preventDefault();
-    talks.save({
-      name: $('#event_name').val(),
-      description: $('#event_description').val()
+    chatCollection.save({
+      name: $('#chat_username').val(),
+      description: $('#chat_message').val()
     }).then(function() {
+      console.log("saved");
       setTimeout(transmitToServer);
     });
-    this.reset();
+    $('#chat_message').val("");
     return false;
   });
 
-  var talkEvents = new EventSource('/talks/events');
-  talkEvents.addEventListener('insert', function(event) {
-    talks.save(JSON.parse(event.data));
+  var chatEvents = new EventSource('/chats/events');
+  chatEvents.addEventListener('insert', function(event) {
+    chatCollection.save(JSON.parse(event.data));
   });
 });
 </script>

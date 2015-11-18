@@ -49,21 +49,22 @@ describe('offline synchronized server', function() {
     });
 
 
-    it('shows events posted in one browser in another', function() {
+    it('shows chats posted in one browser in another', function() {
         this.timeout(10000);
         return client1
-            .setValue('#event_name', 'new talk')
-            .submitForm('#event_name')
-            .waitForVisible('#eventList li', 2000)
-            .getText('#eventList li')
+            .setValue('#chat_username', 'John Doe')
+            .setValue('#chat_message', 'Hello world')
+            .submitForm('#chat_message')
+            .waitForVisible('#chatList li', 2000)
+            .getText('#chatList li')
             .then(function(text) {
-                expect(text).to.contain('new talk');
+                expect(text).to.contain('John Doe');
 
                 return client2
-                    .waitForVisible('#eventList li', 2000)
-                    .getText('#eventList li')
+                    .waitForVisible('#chatList li', 2000)
+                    .getText('#chatList li')
             }).then(function(text) {
-                expect(text).to.contain('new talk');
+                expect(text).to.contain('John Doe');
             });
     });
 });

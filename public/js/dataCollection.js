@@ -95,7 +95,7 @@ var appDataCollection = (function() {
                 console.log('upgrade', e.oldVersion, e.newVersion);
                 var db = openRequest.result;
                 if (e.oldVersion < 1) {
-                    var store = db.createObjectStore('talks', { keyPath: 'id' });
+                    var store = db.createObjectStore('chatCollection', { keyPath: 'id' });
                     store.createIndex('by_createdAt', 'createdAt', {unique: false});
                     store.createIndex('by_transmittedAt', 'transmittedAt', {unique: false});
                 }

@@ -8,19 +8,19 @@ app.use(express.static('public'));
 app.use(bodyParser.json());
 
 var eventSources = [];
-var talks = {};
+var chats = {};
 
 var Datastore = require('nedb');
-var db = new Datastore({ filename: 'db/talks.json' });
+var db = new Datastore({ filename: 'db/chats.json' });
 
 db.loadDatabase(function(err) {    // Callback is optional
-    app.post('/talks', function(req, res) {
-        var talk = req.body;
-        talk._id = talk.id;
-        talks[talk.id] = talk;
+    app.post('/chats', function(req, res) {
+        var chat = req.body;
+        chat._id = chat.id;
+        chats[chat.id] = chat;
         res.status(200).end();
 
-        db.insert(talk);
+        db.insert(chat);
 
         eventSources.forEach(function(eventSource) {
             eventSource.write('event: insert\n');
@@ -29,7 +29,7 @@ db.loadDatabase(function(err) {    // Callback is optional
         });
     });
 
-    app.get('/talks/events', function(req, res) {
+    app.get('/chats/events', function(req, res) {
         res.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
